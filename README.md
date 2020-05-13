@@ -2,6 +2,12 @@
 
 Provides a archiver with extendable archive types
 
+## HOW TO
+
+Just right-click on any folder in the workspace you want to archive and choose 'Archive'.
+If you have more than one archive type installed, the extension will prompt you for an archive type it should use to archive the folder.
+After the folder is scanned and archived a save dialog will pop up to choose where to save the archive.
+
 ## Features
 
 * Custom archive types:
