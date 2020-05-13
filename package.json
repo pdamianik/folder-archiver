@@ -17,6 +17,10 @@
 		"compress"
 	],
 	"preview": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/pdamianik/folder-archiver.git"
+	},
 	"activationEvents": [
 		"onCommand:folder-archiver.archive"
 	],
