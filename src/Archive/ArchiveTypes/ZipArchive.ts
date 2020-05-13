@@ -1,4 +1,4 @@
-import { Archive, ArchiveLocales } from "./Archive";
+import { Archive, ArchiveLocales } from "../Archive";
 import * as JSZip from 'jszip';
 
 export class ZipArchive implements Archive {

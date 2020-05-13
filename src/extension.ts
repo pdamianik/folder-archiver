@@ -3,10 +3,9 @@
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
 import { Archive, archiveTypes, getArchiveType, Archiver } from './Archive/Archive';
-import { ZipArchive } from './Archive/ZipArchive';
+import { ZipArchive } from './Archive/ArchiveTypes/ZipArchive';
 import { ProgressManager } from './ProgressManager';
 import * as path from 'path';
-import { TestArchive } from './Archive/TestArchive';
 
 export namespace folderArchiver.util{
 	export async function sleep(ms: number) {
@@ -91,7 +90,6 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 
 	api.registerArchiveType(new ZipArchive());
-	api.registerArchiveType(new TestArchive());
 
 	return api;
 }
