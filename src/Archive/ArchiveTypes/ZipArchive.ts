@@ -1,8 +1,9 @@
-import { Archive, ArchiveLocales } from "../Archive";
+import { Archive, ArchiveLocales } from "./ArchiveType";
 import * as JSZip from 'jszip';
 
 export class ZipArchive implements Archive {
     archive_extension_types : string[] = ["zip"];
+    
     archive_locales:ArchiveLocales = {
         name: 'ZIP',
         inProgressVerb: 'zipping',

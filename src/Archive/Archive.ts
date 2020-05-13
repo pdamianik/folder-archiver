@@ -1,80 +1,8 @@
 import { Uri, FileType, workspace, window, Progress, CancellationToken, DebugConsoleMode } from "vscode";
 import { Thread } from "../ProgressManager";
 import { FileNodeSystem } from '../FileSystem/FileSystem';
+import { Archive } from './ArchiveTypes/ArchiveType';
 import * as path from 'path';
-
-export var archiveTypes : {[archiveTypeName:string]: Archive;} = {};
-
-export async function getArchiveType() : Promise<Archive | undefined> {
-    let archiveTypeNames : string[] = [];
-
-    for (let archiveTypeName in archiveTypes) {
-        archiveTypeNames.push(archiveTypeName);
-    }
-
-    let archiveTypeName : string;
-
-    if (archiveTypeNames.length > 1) {
-        archiveTypeName = (await window.showQuickPick(archiveTypeNames, {placeHolder: 'Select the archive type'}))!;
-    } else if (archiveTypeNames.length === 1) {
-        archiveTypeName = archiveTypeNames[0];
-    } else {
-        window.showErrorMessage('There are no archive types registered');
-        return;
-    }
-
-    return archiveTypes[archiveTypeName];
-}
-
-export interface ArchiveLocales{
-    /**
-     * The name of the Archive Type
-     * '.zip': 'ZIP'
-     */
-    name?:string;
-    /**
-     * The verb that will be shown to indicate that the extension currently archives a folder
-     * '.zip': 'zipping'
-     */
-    inProgressVerb?:string;
-    /**
-     * The typle of the file type
-     * '.zip': 'ZIP folder'
-     */
-    fileTypeTitle?:string;
-}
-
-export interface Archive{
-    archive_extension_types: string[];
-    archive_locales: ArchiveLocales;
-
-    /**
-     * Generates a new instance of this archive type
-     */
-    
-    newInstance() : Archive;
-
-    /**
-     * Adds a folder to the archive
-     * @param path The path of the folder relative to the archive's root
-     */
-
-    addFolder(path : string): Promise<void>;
-
-    /**
-     * Adds a file to the archive
-     * @param path The path of the file relative to the archive's root
-     * @param fileData The content of the file
-     */
-
-    addFile(path : string, fileData : Uint8Array) : Promise<void>;
-
-    /**
-     * Returns the archive in a form that is ready to be written to the disk
-     */
-
-    getArchive() : Promise<Uint8Array>;
-}
 
 export class Archiver implements Thread {
     private _running : boolean = false;
@@ -131,6 +59,10 @@ export class Archiver implements Thread {
         }
 
         this.onArchived(await this.archive.getArchive());
+
+        if (!this._running) {
+            reject('Thread stopped by the ProgressManager');
+        }
 
         resolve('done ' + this.archive.archive_locales.inProgressVerb + ' folder ' +  path.basename(this.location.path));
         this._running = false;
