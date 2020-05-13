@@ -7,9 +7,16 @@
 	"engines": {
 		"vscode": "^1.45.0"
 	},
+	"license": "SEE LICENSE IN LICENSE",
 	"categories": [
 		"Other"
 	],
+	"keywords": [
+		"archive",
+		"zip",
+		"compress"
+	],
+	"preview": true,
 	"activationEvents": [
 		"onCommand:folder-archiver.archive"
 	],
