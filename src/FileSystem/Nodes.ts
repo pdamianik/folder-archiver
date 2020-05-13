@@ -26,15 +26,19 @@ export class DirectoryNode extends FileNode implements Node {
     private _contentNodes: (DirectoryNode | FileNode)[] = [];
 
     async getContentNode(name : string) : Promise<DirectoryNode | FileNode> {
-        if (name === '.')
+        if (name === '.') {
             return this;
+        }
 
-        for (let contentNode of this._contentNodes)
-            if (contentNode.name === name)
-                if (contentNode.type != FileType.Directory)
+        for (let contentNode of this._contentNodes) {
+            if (contentNode.name === name) {
+                if (contentNode.type !== FileType.Directory) {
                     throw new FileSystemError('node ' + name + ' is not a directory');
-                else
+                } else {
                     return contentNode;
+                }
+            }
+        }
         throw new FileSystemError('can\'t find node: ' + name);
     }
 

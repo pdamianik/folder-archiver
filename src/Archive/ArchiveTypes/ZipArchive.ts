@@ -7,7 +7,7 @@ export class ZipArchive implements Archive {
         name: 'ZIP',
         inProgressVerb: 'zipping',
         fileTypeTitle: 'ZIP folder'
-    }
+    };
 
     private zipFile : JSZip;
 

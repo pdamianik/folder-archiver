@@ -3,21 +3,22 @@ import { Thread } from "../ProgressManager";
 import { FileNodeSystem } from '../FileSystem/FileSystem';
 import * as path from 'path';
 
-export var archiveTypes : {[archiveTypeName:string]: Archive;} = {}
+export var archiveTypes : {[archiveTypeName:string]: Archive;} = {};
 
 export async function getArchiveType() : Promise<Archive | undefined> {
     let archiveTypeNames : string[] = [];
 
-    for (let archiveTypeName in archiveTypes)
+    for (let archiveTypeName in archiveTypes) {
         archiveTypeNames.push(archiveTypeName);
+    }
 
     let archiveTypeName : string;
 
-    if (archiveTypeNames.length > 1)
+    if (archiveTypeNames.length > 1) {
         archiveTypeName = (await window.showQuickPick(archiveTypeNames, {placeHolder: 'Select the archive type'}))!;
-    else if (archiveTypeNames.length === 1)
+    } else if (archiveTypeNames.length === 1) {
         archiveTypeName = archiveTypeNames[0];
-    else {
+    } else {
         window.showErrorMessage('There are no archive types registered');
         return;
     }
@@ -83,8 +84,6 @@ export class Archiver implements Thread {
 
     constructor(location : Uri, archiveType : Archive, onArchived : (data:Uint8Array) => void) {
         this.location = location;
-        if(!archiveTypes.hasOwnProperty)
-            throw new TypeError('couldn\'t find archive type ' + archiveType);
         this.archive = archiveType;
         this.onArchived = onArchived;
     }
@@ -105,21 +104,22 @@ export class Archiver implements Thread {
 
         let fileSystem : FileNodeSystem = await FileNodeSystem.scanPath(this.location);
 
-        let entries = fileSystem.getAllEntries();
+        let entries = fileSystem.flat();
         let nextEntry = entries.next();
         let updateStep = 100/fileSystem.elementCount;
 
         while (this._running && !nextEntry.done) {
             let node = nextEntry.value;
-            if (node.type === FileType.Directory)
+            if (node.type === FileType.Directory) {
                 this.archive.addFolder(node.fileSystemPath);
-            else if (node.type === FileType.File)
+            } else if (node.type === FileType.File) {
                 try {
                     await workspace.fs.readFile(node.uri).then(async (data) => {
                         await this.archive.addFile(node.fileSystemPath, data);
                     });
                 } catch (FileSystemError) {
                 }
+            }
             nextEntry = entries.next();
 
             progress.report({

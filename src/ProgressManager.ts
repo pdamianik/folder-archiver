@@ -30,7 +30,7 @@ export class ProgressManager{
 
                 function updateActiveTasks() {
                     activeTasks.splice(activeTasks.indexOf(thread), 1);
-                    if (activeTasks.length < maxActiveThreadCount() && waitingQueue.length != 0) {
+                    if (activeTasks.length < maxActiveThreadCount() && waitingQueue.length !== 0) {
                         let newProcess = waitingQueue.shift();
                         activeTasks.push(newProcess?.runnable!);
                         newProcess?.runnable.run(newProcess.progress, newProcess.cancellationToken, newProcess.resolve, newProcess.reject);
@@ -49,8 +49,9 @@ export class ProgressManager{
                     return rej(reason);
                 }
 
-                if (token.isCancellationRequested)
+                if (token.isCancellationRequested) {
                     return;
+                }
 
                 token.onCancellationRequested(_=> {
                     thread.stop();
@@ -74,7 +75,7 @@ class WaintingQueueObject{
     progress : vscode.Progress<{message?:string, increment?:number}>;
     cancellationToken : vscode.CancellationToken;
     resolve : (message?: string, value?: PromiseLike<any>) => void;
-    reject : (reason?: any) => void
+    reject : (reason?: any) => void;
 
     constructor(runnable : Thread, progress : vscode.Progress<{message?:string, increment?:number}>, cancellationToken : vscode.CancellationToken, resolve : (message?: string, value?: PromiseLike<any>) => void, reject : (reason?: any) => void) {
         this.runnable = runnable;

@@ -15,8 +15,9 @@ export namespace folderArchiver.util{
 	export const DEBUG = false;
 
 	export function log(message : any, ...optionalParameters : any[]) : void {
-		if (DEBUG)
+		if (DEBUG) {
 			console.log(message, ...optionalParameters);
+		}
 	}
 }
 
@@ -34,8 +35,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			let archive: Archive = (await getArchiveType())?.newInstance()!;
 
-			if (archive === undefined)
+			if (archive === undefined){
 				return;
+			}
 
 			let filters : {[name: string] : string[]} = {};
 			filters[archive.archive_locales.fileTypeTitle!] = archive.archive_extension_types;			
@@ -50,10 +52,11 @@ export async function activate(context: vscode.ExtensionContext) {
 						),
 					filters: filters
 				}).then((uri : vscode.Uri | undefined) => {
-					if (uri === undefined)
+					if (uri === undefined) {
 						vscode.window.showWarningMessage('aborted saving archive');
-					else
+					} else {
 						workspace.fs.writeFile(uri!, data);
+					}
 				});
 			});
 
@@ -69,8 +72,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		async registerArchiveType(...archiveTypesToRegister : Archive[]) : Promise<void> {
 			for (let archiveType of archiveTypesToRegister) {
-				if (archiveTypes.hasOwnProperty(archiveType.archive_locales.name!))
+				if (archiveTypes.hasOwnProperty(archiveType.archive_locales.name!)) {
 					continue;
+				}
 				archiveTypes[archiveType.archive_locales.name!] = archiveType;
 			}
 		},
@@ -82,12 +86,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		async unregisterArchiver(...archiverTypeToUnregisterName : string[]) : Promise<void> {
 			for (let archiveTypeName of archiverTypeToUnregisterName) {
-				if (!archiveTypes.hasOwnProperty(archiveTypeName))
+				if (!archiveTypes.hasOwnProperty(archiveTypeName)) {
 					continue;
+				}
 				delete archiveTypes[archiveTypeName];
 			}
 		}
-	}
+	};
 
 	api.registerArchiveType(new ZipArchive());
 

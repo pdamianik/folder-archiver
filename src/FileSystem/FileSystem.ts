@@ -19,20 +19,23 @@ export class FileNodeSystem {
 
         for (let folderIndex in pathSegments) {
             let folder = pathSegments[folderIndex];
-            if (folderIndex === '0' && folder == currentFolder.name)
+            if (folderIndex === '0' && folder === currentFolder.name) {
                 continue;
+            }
             let node : Node;
 
             try {
                 node = await currentFolder.getContentNode(folder);
             } catch (error) {
-                if (error instanceof FileSystemError && error.message.startsWith('can\t'))
+                if (error instanceof FileSystemError && error.message.startsWith('can\t')) {
                     throw new FileSystemError('can\'t find path: ' + folderPath);
+                }
                 throw error;
             }
 
-            if (node instanceof DirectoryNode)
+            if (node instanceof DirectoryNode) {
                 currentFolder = node;
+            }
         }
 
         return currentFolder;
@@ -40,8 +43,9 @@ export class FileNodeSystem {
 
     public async addDirectory(directoryPath : string, directoryUri : Uri) : Promise<void> {
         let queryPath = path.dirname(path.normalize(directoryPath)).replace('\\', '/');
-        if (directoryPath === '.')
+        if (directoryPath === '.') {
             return;
+        }
         (await this.queryFolder(queryPath)).contentNodes.push(new DirectoryNode(directoryUri, directoryPath));
         this._elementCount++;
     }
@@ -60,19 +64,22 @@ export class FileNodeSystem {
         let filename = path.basename(normalizedPath);
         let contentNodes = (await this.queryFolder(folderPath)).contentNodes;
 
-        for (let i in contentNodes)
-            if (filename === contentNodes[i].name)
+        for (let i in contentNodes) {
+            if (filename === contentNodes[i].name) {
                 delete contentNodes[i];
+            }
+        }
     }
 
-    public* getAllEntries() {
+    public* flat() {
         let nodesToScan : (DirectoryNode|FileNode)[] = [this.files];
 
-        while (nodesToScan.length != 0) {
+        while (nodesToScan.length !== 0) {
             let nextNode = nodesToScan.shift()!;
             yield nextNode;
-            if (nextNode instanceof DirectoryNode)
+            if (nextNode instanceof DirectoryNode) {
                 nodesToScan.unshift(...nextNode.contentNodes);
+            }
         }
 
         return;
@@ -83,14 +90,15 @@ export class FileNodeSystem {
     }
 
     public static async scanPath(location : Uri) : Promise<FileNodeSystem> {
-        if (!this.isFolder(location))
+        if (!this.isFolder(location)) {
             throw new FileSystemError('path is not folder: ' + location);
+        }
 
         let pathsToScan : Uri[] = [location];
         let rootFolder : string = path.basename(location.path);
         let fileSystem : FileNodeSystem = new FileNodeSystem(location);
 
-        while (pathsToScan.length != 0) {
+        while (pathsToScan.length !== 0) {
             let pathToScan : any = pathsToScan.shift();
             let pathToScanRelative = pathToScan.path.substring(location.path.length+1);
             let relativePath = pathToScanRelative + (pathToScanRelative === "" ? "" : "/");
@@ -105,9 +113,9 @@ export class FileNodeSystem {
                 let absoluteLocation = Uri.joinPath(pathToScan, pathInFolder[0]);
                 let relativePathInFolder = relativePath + pathInFolder[0];
 
-                if (pathInFolder[1] == FileType.File) {
+                if (pathInFolder[1] === FileType.File) {
                     await fileSystem.addFile(rootFolder + '/' + relativePathInFolder, absoluteLocation);
-                } else if (pathInFolder[1] == FileType.Directory) {
+                } else if (pathInFolder[1] === FileType.Directory) {
                     pathsToScan.push(absoluteLocation);
                     await fileSystem.addDirectory(rootFolder + '/' + relativePathInFolder, absoluteLocation);
                 }
@@ -118,6 +126,6 @@ export class FileNodeSystem {
     }
 
     static async isFolder(location : Uri) : Promise<boolean> {
-        return (await workspace.fs.stat(location)).type == 2;
+        return (await workspace.fs.stat(location)).type === 2;
     }
 }
