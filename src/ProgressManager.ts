@@ -68,6 +68,20 @@ export class ProgressManager{
             });
         });
     }
+
+    async killAllThreads() {
+        for (let thread of this.activeTasks) {
+            thread.stop();
+        }
+
+        this.activeTasks = [];
+
+        for (let waitingThread of this.waitingQueue) {
+            waitingThread.reject('Thread stopped by the ProgressManager');
+        }
+
+        this.waitingQueue = [];
+    }
 }
 
 class WaintingQueueObject{

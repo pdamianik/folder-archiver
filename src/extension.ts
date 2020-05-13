@@ -2,10 +2,13 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
-import { Archive, archiveTypes, getArchiveType, Archiver } from './Archive/Archive';
+import { Archiver } from './Archive/Archive';
 import { ZipArchive } from './Archive/ArchiveTypes/ZipArchive';
 import { ProgressManager } from './ProgressManager';
 import * as path from 'path';
+import { ArchiveTypeManager, Archive } from './Archive/ArchiveTypes/ArchiveType';
+
+var progressManager : ProgressManager = new ProgressManager();
 
 export namespace folderArchiver.util{
 	export async function sleep(ms: number) {
@@ -22,7 +25,7 @@ export namespace folderArchiver.util{
 }
 
 export async function activate(context: vscode.ExtensionContext) {
-	var progressManager : ProgressManager = new ProgressManager();
+	var archiveTypeManager : ArchiveTypeManager = new ArchiveTypeManager();
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('folder-archiver.archive', async (location) => {
@@ -33,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			let metadata = await workspace.fs.stat(location);
 
-			let archive: Archive = (await getArchiveType())?.newInstance()!;
+			let archive: Archive = (await archiveTypeManager.getArchiveType())?.newInstance()!;
 
 			if (archive === undefined){
 				return;
@@ -64,40 +67,12 @@ export async function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	let api = {
-		/**
-		 * Used to register a new archive type
-		 * @param archiveTypesToRegister A class that implements the Archiver interface
-		 */
+	archiveTypeManager.registerArchiveType(new ZipArchive());
 
-		async registerArchiveType(...archiveTypesToRegister : Archive[]) : Promise<void> {
-			for (let archiveType of archiveTypesToRegister) {
-				if (archiveTypes.hasOwnProperty(archiveType.archive_locales.name!)) {
-					continue;
-				}
-				archiveTypes[archiveType.archive_locales.name!] = archiveType;
-			}
-		},
-
-		/**
-		 * Used to unregister a archive type
-		 * @param archiverTypeToUnregisterName The name of the archive type to unregister
-		 */
-
-		async unregisterArchiver(...archiverTypeToUnregisterName : string[]) : Promise<void> {
-			for (let archiveTypeName of archiverTypeToUnregisterName) {
-				if (!archiveTypes.hasOwnProperty(archiveTypeName)) {
-					continue;
-				}
-				delete archiveTypes[archiveTypeName];
-			}
-		}
-	};
-
-	api.registerArchiveType(new ZipArchive());
-
-	return api;
+	return archiveTypeManager;
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+	progressManager.killAllThreads();
+}
