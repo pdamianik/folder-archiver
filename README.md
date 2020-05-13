@@ -1,4 +1,4 @@
-# folder-archiver README
+# Folder Archiver README
 
 This is the README for your extension "folder-archiver". After writing up a brief description, we recommend including the following sections.
 
