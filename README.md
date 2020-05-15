@@ -32,6 +32,7 @@ This extension contributes the following settings:
 
 ## TODO
 
+ - [ ] add extract functionality
  - [ ] add custom archive type tutrial
 
 ### Required for 1.0.0
