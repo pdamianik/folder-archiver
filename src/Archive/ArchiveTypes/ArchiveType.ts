@@ -1,6 +1,6 @@
 import { window } from 'vscode';
 
-export interface ArchiveLocales{
+export interface ArchiveTypeLocales{
     /**
      * The name of the Archive Type
      * '.zip': 'ZIP'
@@ -18,15 +18,15 @@ export interface ArchiveLocales{
     fileTypeTitle?:string;
 }
 
-export interface Archive{
+export interface ArchiveType{
     archive_extension_types: string[];
-    archive_locales: ArchiveLocales;
+    archive_locales: ArchiveTypeLocales;
 
     /**
      * Generates a new instance of this archive type
      */
     
-    newInstance() : Archive;
+    newInstance() : ArchiveType;
 
     /**
      * Adds a folder to the archive
@@ -51,9 +51,9 @@ export interface Archive{
 }
 
 export class ArchiveTypeManager {
-    private _archiveTypes : {[archiveTypeName:string]: Archive;} = {};
+    private _archiveTypes : {[archiveTypeName:string]: ArchiveType;} = {};
 
-    public get archiveTypes() : {[archiveTypeName:string]: Archive;} {
+    public get archiveTypes() : {[archiveTypeName:string]: ArchiveType;} {
         return this._archiveTypes;
     }
 
@@ -61,7 +61,7 @@ export class ArchiveTypeManager {
      * @returns a Archive type selected by the user
      */
 
-    async getArchiveType() : Promise<Archive | undefined> {
+    async getArchiveType() : Promise<ArchiveType | undefined> {
         let archiveTypeNames : string[] = [];
     
         for (let archiveTypeName in this._archiveTypes) {
@@ -88,7 +88,7 @@ export class ArchiveTypeManager {
      * @param archiveTypesToRegister A class that implements the Archiver interface
      */
 
-    async registerArchiveType(...archiveTypesToRegister : Archive[]) : Promise<void> {
+    async registerArchiveType(...archiveTypesToRegister : ArchiveType[]) : Promise<void> {
         for (let archiveType of archiveTypesToRegister) {
             if (this._archiveTypes.hasOwnProperty(archiveType.archive_locales.name!)) {
                 continue;

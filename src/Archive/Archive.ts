@@ -1,16 +1,16 @@
-import { Uri, FileType, workspace, window, Progress, CancellationToken, DebugConsoleMode } from "vscode";
+import { Uri, FileType, workspace, Progress, CancellationToken, DebugConsoleMode } from "vscode";
 import { Thread } from "../ProgressManager";
 import { FileNodeSystem } from '../FileSystem/FileSystem';
-import { Archive } from './ArchiveTypes/ArchiveType';
+import { ArchiveType } from './ArchiveTypes/ArchiveType';
 import * as path from 'path';
 
 export class Archiver implements Thread {
     private _running : boolean = false;
     private location : Uri;
-    private archive : Archive;
+    private archive : ArchiveType;
     private onArchived : (data:Uint8Array) => void;
 
-    constructor(location : Uri, archiveType : Archive, onArchived : (data:Uint8Array) => void) {
+    constructor(location : Uri, archiveType : ArchiveType, onArchived : (data:Uint8Array) => void) {
         this.location = location;
         this.archive = archiveType;
         this.onArchived = onArchived;

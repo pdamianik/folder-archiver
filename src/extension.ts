@@ -6,7 +6,7 @@ import { Archiver } from './Archive/Archive';
 import { ZipArchive } from './Archive/ArchiveTypes/ZipArchive';
 import { ProgressManager } from './ProgressManager';
 import * as path from 'path';
-import { ArchiveTypeManager, Archive } from './Archive/ArchiveTypes/ArchiveType';
+import { ArchiveTypeManager, ArchiveType } from './Archive/ArchiveTypes/ArchiveType';
 
 var progressManager : ProgressManager = new ProgressManager();
 
@@ -36,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			let metadata = await workspace.fs.stat(location);
 
-			let archive: Archive = (await archiveTypeManager.getArchiveType())?.newInstance()!;
+			let archive: ArchiveType = (await archiveTypeManager.getArchiveType())?.newInstance()!;
 
 			if (archive === undefined){
 				return;
