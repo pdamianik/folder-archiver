@@ -43,7 +43,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			}
 
 			let filters : {[name: string] : string[]} = {};
-			filters[archive.archive_locales.fileTypeTitle!] = archive.archive_extension_types;			
+			filters[archive.archive_locales.fileTypeTitle!] = archive.archive_extension_types;
+			
 			let archiver = new Archiver(location, archive, (data : Uint8Array) => {
 				vscode.window.showSaveDialog({
 					defaultUri:
