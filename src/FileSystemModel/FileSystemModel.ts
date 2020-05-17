@@ -2,7 +2,7 @@ import { Uri, workspace, FileSystemError, FileType } from 'vscode';
 import * as path from 'path';
 import { Node, DirectoryNode, FileNode } from './Nodes';
 
-export class FileNodeSystem {
+export class FileSystemModel {
     public files: DirectoryNode;
     private _elementCount : number;
 
@@ -89,14 +89,14 @@ export class FileNodeSystem {
         return this._elementCount;
     }
 
-    public static async scanPath(location : Uri) : Promise<FileNodeSystem> {
+    public static async scanPath(location : Uri) : Promise<FileSystemModel> {
         if (!this.isFolder(location)) {
             throw new FileSystemError('path is not folder: ' + location);
         }
 
         let pathsToScan : Uri[] = [location];
         let rootFolder : string = path.basename(location.path);
-        let fileSystem : FileNodeSystem = new FileNodeSystem(location);
+        let fileSystem : FileSystemModel = new FileSystemModel(location);
 
         while (pathsToScan.length !== 0) {
             let pathToScan : any = pathsToScan.shift();
