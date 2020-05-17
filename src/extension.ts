@@ -2,41 +2,45 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import { workspace } from 'vscode';
-import { Archiver } from './Archive/Archive';
-import { ZipArchive } from './Archive/ArchiveTypes/ZipArchive';
+import { Archiver, ArchiveTypeManager, UserInterface } from './Archive/Archive';
 import { ProgressManager } from './ProgressManager';
-import * as path from 'path';
-import { ArchiveTypeManager, ArchiveType } from './Archive/ArchiveTypes/ArchiveType';
+import { ArchiveType } from 'folder-archiver-types';
 
 var progressManager : ProgressManager = new ProgressManager();
 
-export namespace folderArchiver.util{
-	export async function sleep(ms: number) {
-		return new Promise(resolve=> setTimeout(resolve, ms));
-	}
-
-	export const DEBUG = false;
-
-	export function log(message : any, ...optionalParameters : any[]) : void {
-		if (DEBUG) {
-			console.log(message, ...optionalParameters);
-		}
-	}
-}
-
 export async function activate(context: vscode.ExtensionContext) {
 	var archiveTypeManager : ArchiveTypeManager = new ArchiveTypeManager();
+	var activeExtensionIdsArray : string[] = [];
+
+	for (let extension of vscode.extensions.all) {
+		activeExtensionIdsArray.push(extension.id);
+	}
+	
+	vscode.extensions.onDidChange(() => {
+		if (activeExtensionIdsArray.length > vscode.extensions.all.length) {
+			for (let activeExtensionId of activeExtensionIdsArray) {
+				let extension = vscode.extensions.getExtension(activeExtensionId);
+				if (extension === undefined || !extension.isActive) {
+					archiveTypeManager.unregisterArchiveTypes(activeExtensionId);
+				}
+			}
+		}
+
+		activeExtensionIdsArray = [];
+	
+		for (let extension of vscode.extensions.all) {
+			activeExtensionIdsArray.push(extension.id);
+		}
+	});
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('folder-archiver.archive', async (location) => {
 			if (location === undefined) {
-				vscode.window.showErrorMessage('You need to select a folder to archive');
+				vscode.window.showErrorMessage('Rightclick on the folder you want to archive and click \'Archive\'');
 				return;
 			}
 
-			let metadata = await workspace.fs.stat(location);
-
-			let archive: ArchiveType = (await archiveTypeManager.getArchiveType())?.newInstance()!;
+			let archive: ArchiveType = (await UserInterface.getArchiveType(archiveTypeManager.archiveTypes))?.newInstance()!;
 
 			if (archive === undefined){
 				return;
@@ -49,15 +53,12 @@ export async function activate(context: vscode.ExtensionContext) {
 				vscode.window.showSaveDialog({
 					defaultUri:
 						vscode.Uri.file(
-							location.path.substring(
-								0,
-								location.path.length-path.extname(location.path).length+1
-							) + '.' + archive.archive_extension_types[0]
+							location.path + '.' + archive.archive_extension_types[0]
 						),
 					filters: filters
 				}).then((uri : vscode.Uri | undefined) => {
 					if (uri === undefined) {
-						vscode.window.showWarningMessage('aborted saving archive');
+						vscode.window.showWarningMessage('aborted saving ' + archive.archive_locales.fileTypeTitle);
 					} else {
 						workspace.fs.writeFile(uri!, data);
 					}
@@ -68,9 +69,19 @@ export async function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	archiveTypeManager.registerArchiveType(new ZipArchive());
+	return {
+		get archiveTypes() : {[archiveTypeName:string]: ArchiveType[];} {
+			return archiveTypeManager.archiveTypes;
+		},
 
-	return archiveTypeManager;
+		registerArchiveType(extensionId: string, ...archiveTypesToRegister : ArchiveType[]) : void {
+			archiveTypeManager.registerArchiveType(extensionId, ...archiveTypesToRegister);
+		},
+
+		unregisterArchiveType(extensionId: string, ...archiveTypesToUnregister : ArchiveType[]) : void {
+			archiveTypeManager.unregisterArchiveType(extensionId, ...archiveTypesToUnregister);
+		}
+	};
 }
 
 // this method is called when your extension is deactivated
