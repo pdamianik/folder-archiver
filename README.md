@@ -1,18 +1,20 @@
-# Folder Archiver README
+# Archiver README
 
 Provides a archiver with extendable archive types
+
+## HOW TO
+
+Just right-click on any folder in the workspace you want to archive and choose 'Archive'.
+If you have more than one archive type installed, the extension will prompt you for an archive type it should use to archive the folder.
+After the folder is scanned and archived a save dialog will pop up to choose where to save the archive.
 
 ## Features
 
 * Custom archive types:
 
-   You can create and register your own archive types
+   You can create and register your own archive types. You can find a tutorial on how to create your own folder-archive ArchiveType here: https://github.com/pdamianik/folder-archiver/blob/master/src/Archive/ArchiveTypes/README.md
 
 ## Requirements
-
-  Name |            Website            |         Install guide         
- ----- | ----------------------------- | ----------------------------- 
- JSZip | https://stuk.github.io/jszip/ | https://stuk.github.io/jszip/ 
 
 ## Extension Settings
 
@@ -22,15 +24,21 @@ This extension contributes the following settings:
 
 ## Known Issues
 
- - [ ] setting `folder-archiver.maxArchiveThreadCount` can't be disable with value of 0 or lower
+ - [x] setting `folder-archiver.maxArchiveThreadCount` can't be disable with value of 0 or lower
 
 ## TODO
 
- - [ ] add custom archive type tutrial
+### Requried for the first release 0.0.1
 
-### Required for 1.0.0
- - [ ] namespaces
- - [ ] dependency injection
+ - [x] add custom archive type tutrial
+
+### Required for 0.2.0
+
+ - [ ] add extract functionality
+
+### Requrired for 1.0.0
+
+ - [ ] reimplement the system with dependency injection
 
 ## Release Notes
 

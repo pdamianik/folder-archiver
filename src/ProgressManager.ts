@@ -26,11 +26,11 @@ export class ProgressManager{
             return new Promise<void>((res, rej) => {
                 var activeTasks = this.activeTasks;
                 var waitingQueue = this.waitingQueue;
-                let maxActiveThreadCount = this.maxActiveThreadCount;
+                let maxActiveThreadCount = this.maxActiveThreadCount();
 
                 function updateActiveTasks() {
                     activeTasks.splice(activeTasks.indexOf(thread), 1);
-                    if (activeTasks.length < maxActiveThreadCount() && waitingQueue.length != 0) {
+                    if (maxActiveThreadCount > 0 && activeTasks.length < maxActiveThreadCount() && waitingQueue.length !== 0) {
                         let newProcess = waitingQueue.shift();
                         activeTasks.push(newProcess?.runnable!);
                         newProcess?.runnable.run(newProcess.progress, newProcess.cancellationToken, newProcess.resolve, newProcess.reject);
@@ -49,15 +49,16 @@ export class ProgressManager{
                     return rej(reason);
                 }
 
-                if (token.isCancellationRequested)
+                if (token.isCancellationRequested) {
                     return;
+                }
 
                 token.onCancellationRequested(_=> {
                     thread.stop();
                     reject('task stopped by the user');
                 });
                 
-                if (this.activeTasks.length >= this.maxActiveThreadCount()) {
+                if (maxActiveThreadCount > 0 && this.activeTasks.length >= this.maxActiveThreadCount()) {
                     this.waitingQueue.push(new WaintingQueueObject(thread, progress, token, resolve, reject));
                     vscode.window.showWarningMessage('maximum thread count (' + maxActiveThreadCount() +  ') reached');
                 } else {
@@ -67,6 +68,20 @@ export class ProgressManager{
             });
         });
     }
+
+    async killAllThreads() {
+        for (let thread of this.activeTasks) {
+            thread.stop();
+        }
+
+        this.activeTasks = [];
+
+        for (let waitingThread of this.waitingQueue) {
+            waitingThread.reject('Thread stopped by the ProgressManager');
+        }
+
+        this.waitingQueue = [];
+    }
 }
 
 class WaintingQueueObject{
@@ -74,7 +89,7 @@ class WaintingQueueObject{
     progress : vscode.Progress<{message?:string, increment?:number}>;
     cancellationToken : vscode.CancellationToken;
     resolve : (message?: string, value?: PromiseLike<any>) => void;
-    reject : (reason?: any) => void
+    reject : (reason?: any) => void;
 
     constructor(runnable : Thread, progress : vscode.Progress<{message?:string, increment?:number}>, cancellationToken : vscode.CancellationToken, resolve : (message?: string, value?: PromiseLike<any>) => void, reject : (reason?: any) => void) {
         this.runnable = runnable;

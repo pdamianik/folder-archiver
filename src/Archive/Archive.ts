@@ -1,90 +1,18 @@
-import { Uri, FileType, workspace, window, Progress, CancellationToken, DebugConsoleMode } from "vscode";
+import { Uri, FileType, workspace, Progress, CancellationToken, DebugConsoleMode } from "vscode";
 import { Thread } from "../ProgressManager";
-import { FileNodeSystem } from '../FileSystem/FileSystem';
+import { FileSystemModel } from '../FileSystemModel/FileSystemModel';
+import { ArchiveType } from 'folder-archiver-types';
 import * as path from 'path';
-
-export var archiveTypes : {[archiveTypeName:string]: Archive;} = {}
-
-export async function getArchiveType() : Promise<Archive | undefined> {
-    let archiveTypeNames : string[] = [];
-
-    for (let archiveTypeName in archiveTypes)
-        archiveTypeNames.push(archiveTypeName);
-
-    let archiveTypeName : string;
-
-    if (archiveTypeNames.length > 1)
-        archiveTypeName = (await window.showQuickPick(archiveTypeNames, {placeHolder: 'Select the archive type'}))!;
-    else if (archiveTypeNames.length === 1)
-        archiveTypeName = archiveTypeNames[0];
-    else {
-        window.showErrorMessage('There are no archive types registered');
-        return;
-    }
-
-    return archiveTypes[archiveTypeName];
-}
-
-export interface ArchiveLocales{
-    /**
-     * The name of the Archive Type
-     * '.zip': 'ZIP'
-     */
-    name?:string;
-    /**
-     * The verb that will be shown to indicate that the extension currently archives a folder
-     * '.zip': 'zipping'
-     */
-    inProgressVerb?:string;
-    /**
-     * The typle of the file type
-     * '.zip': 'ZIP folder'
-     */
-    fileTypeTitle?:string;
-}
-
-export interface Archive{
-    archive_extension_types: string[];
-    archive_locales: ArchiveLocales;
-
-    /**
-     * Generates a new instance of this archive type
-     */
-    
-    newInstance() : Archive;
-
-    /**
-     * Adds a folder to the archive
-     * @param path The path of the folder relative to the archive's root
-     */
-
-    addFolder(path : string): Promise<void>;
-
-    /**
-     * Adds a file to the archive
-     * @param path The path of the file relative to the archive's root
-     * @param fileData The content of the file
-     */
-
-    addFile(path : string, fileData : Uint8Array) : Promise<void>;
-
-    /**
-     * Returns the archive in a form that is ready to be written to the disk
-     */
-
-    getArchive() : Promise<Uint8Array>;
-}
+import { window, extensions } from 'vscode';
 
 export class Archiver implements Thread {
     private _running : boolean = false;
     private location : Uri;
-    private archive : Archive;
+    private archive : ArchiveType;
     private onArchived : (data:Uint8Array) => void;
 
-    constructor(location : Uri, archiveType : Archive, onArchived : (data:Uint8Array) => void) {
+    constructor(location : Uri, archiveType : ArchiveType, onArchived : (data:Uint8Array) => void) {
         this.location = location;
-        if(!archiveTypes.hasOwnProperty)
-            throw new TypeError('couldn\'t find archive type ' + archiveType);
         this.archive = archiveType;
         this.onArchived = onArchived;
     }
@@ -103,23 +31,24 @@ export class Archiver implements Thread {
         progress.report({ message : 'scanning folder ' + rootFolder });
         this.archive = this.archive.newInstance();
 
-        let fileSystem : FileNodeSystem = await FileNodeSystem.scanPath(this.location);
+        let fileSystem : FileSystemModel = await FileSystemModel.scanPath(this.location);
 
-        let entries = fileSystem.getAllEntries();
+        let entries = fileSystem.flat();
         let nextEntry = entries.next();
         let updateStep = 100/fileSystem.elementCount;
 
         while (this._running && !nextEntry.done) {
             let node = nextEntry.value;
-            if (node.type === FileType.Directory)
+            if (node.type === FileType.Directory) {
                 this.archive.addFolder(node.fileSystemPath);
-            else if (node.type === FileType.File)
+            } else if (node.type === FileType.File) {
                 try {
                     await workspace.fs.readFile(node.uri).then(async (data) => {
                         await this.archive.addFile(node.fileSystemPath, data);
                     });
                 } catch (FileSystemError) {
                 }
+            }
             nextEntry = entries.next();
 
             progress.report({
@@ -132,11 +61,111 @@ export class Archiver implements Thread {
 
         this.onArchived(await this.archive.getArchive());
 
+        if (!this._running) {
+            reject('Thread stopped by the ProgressManager');
+        }
+
         resolve('done ' + this.archive.archive_locales.inProgressVerb + ' folder ' +  path.basename(this.location.path));
         this._running = false;
     }
 
     public stop() {
         this._running = false;
+    }
+}
+
+export class UserInterface {
+    static async getArchiveType(archiveType : {[archiveTypeName:string]: ArchiveType[];}) : Promise<ArchiveType | undefined> {
+        let archiveTypeNames : string[] = [];
+    
+        for (let archiveTypeName in archiveType) {
+            archiveTypeNames.push(archiveTypeName);
+        }
+    
+        let archiveTypeName : string;
+    
+        if (archiveTypeNames.length > 1) {
+            archiveTypeName = (await window.showQuickPick(archiveTypeNames, {placeHolder: 'Select the archive type'}))!;
+        } else if (archiveTypeNames.length === 1) {
+            archiveTypeName = archiveTypeNames[0];
+        } else {
+            window.showErrorMessage('There are no archive types registered');
+            return;
+        }
+    
+        return archiveType[archiveTypeName][0];
+    }
+}
+
+export class ArchiveTypeManager {
+    private _archiveTypes : {[archiveTypeName:string]: ArchiveType[];} = {};
+    private _extensionIds : {[extensionId:string]: ArchiveType[];} = {};
+
+    public get archiveTypes() : {[archiveTypeName:string]: ArchiveType[];} {
+        return this._archiveTypes;
+    }
+
+    /**
+     * Used to register a new archive type
+     * @param extensionId The id of the extension that the archive types should be registered for
+     * @param archiveTypesToRegister A class that implements the Archiver interface
+     */
+
+    public registerArchiveType(extensionId:string, ...archiveTypesToRegister: ArchiveType[]) : void {
+        if (extensions.getExtension(extensionId) === undefined) {
+            return;
+        }
+
+        if (!this._extensionIds.hasOwnProperty(extensionId)) {
+            this._extensionIds[extensionId] = [];
+        }
+
+        for (let archiveType of archiveTypesToRegister) {
+            if (this._extensionIds[extensionId].includes(archiveType)) {
+                continue;
+            }
+            if (!this._archiveTypes.hasOwnProperty(archiveType.archive_locales.name)) {
+                this._archiveTypes[archiveType.archive_locales.name] = [];
+            }
+            this._extensionIds[extensionId].push(archiveType);
+            this._archiveTypes[archiveType.archive_locales.name].push(archiveType);
+        }
+    }
+
+    /**
+     * Used to unregister a archive type
+     * @param extensionId The id of the extension that the archive types are registered for
+     * @param archiverTypeToUnregisterName The name of the archive type to unregister
+     */
+
+    public unregisterArchiveType(extensionId: string, ...archiverTypesToUnregister : ArchiveType[]) : void {
+        if (!this._extensionIds.hasOwnProperty(extensionId)) {
+            return;
+        }
+
+        for (let archiveType of archiverTypesToUnregister) {
+            if (this._extensionIds[extensionId].includes(archiveType)) {
+                continue;
+            }
+            this._extensionIds[extensionId].splice(this._extensionIds[extensionId].indexOf(archiveType), 1);
+            this._archiveTypes[archiveType.archive_locales.name].splice(this._archiveTypes[archiveType.archive_locales.name].indexOf(archiveType), 1);
+        }
+    }
+
+    /**
+     * Used to unregister all archive types related to a extension id
+     * @param extensionId The id of the extension the archive types to unregister are registered for
+     */
+
+    public unregisterArchiveTypes(extensionId: string) {
+        if (!this._extensionIds.hasOwnProperty(extensionId)) {
+            return;
+        }
+
+        for (let archiveTypeIndex in this._extensionIds[extensionId]) {
+            let archiveType: ArchiveType = this._extensionIds[extensionId][archiveTypeIndex];
+            this._extensionIds[extensionId].splice(Number(archiveTypeIndex), 1);
+            this._archiveTypes[archiveType.archive_locales.name].splice(this._archiveTypes[archiveType.archive_locales.name].indexOf(archiveType), 1);
+        }
     }
 }
