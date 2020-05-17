@@ -69,7 +69,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		})
 	);
 
-	return {
+	let api = {
 		get archiveTypes() : {[archiveTypeName:string]: ArchiveType[];} {
 			return archiveTypeManager.archiveTypes;
 		},
@@ -82,6 +82,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			archiveTypeManager.unregisterArchiveType(extensionId, ...archiveTypesToUnregister);
 		}
 	};
+
+	return api;
 }
 
 // this method is called when your extension is deactivated
