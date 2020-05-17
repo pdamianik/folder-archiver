@@ -10,28 +10,6 @@ var progressManager : ProgressManager = new ProgressManager();
 
 export async function activate(context: vscode.ExtensionContext) {
 	var archiveTypeManager : ArchiveTypeManager = new ArchiveTypeManager();
-	var activeExtensionIdsArray : string[] = [];
-
-	for (let extension of vscode.extensions.all) {
-		activeExtensionIdsArray.push(extension.id);
-	}
-	
-	vscode.extensions.onDidChange(() => {
-		if (activeExtensionIdsArray.length > vscode.extensions.all.length) {
-			for (let activeExtensionId of activeExtensionIdsArray) {
-				let extension = vscode.extensions.getExtension(activeExtensionId);
-				if (extension === undefined || !extension.isActive) {
-					archiveTypeManager.unregisterArchiveTypes(activeExtensionId);
-				}
-			}
-		}
-
-		activeExtensionIdsArray = [];
-	
-		for (let extension of vscode.extensions.all) {
-			activeExtensionIdsArray.push(extension.id);
-		}
-	});
 
 	context.subscriptions.push(
 		vscode.commands.registerCommand('folder-archiver.archive', async (location) => {
