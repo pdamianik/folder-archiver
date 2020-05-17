@@ -32,7 +32,7 @@ This extension contributes the following settings:
 
  - [x] add custom archive type tutrial
 
-### Required for 0.2.0
+### Required for 0.1.0
 
  - [ ] add extract functionality
 

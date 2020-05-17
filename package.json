@@ -2,7 +2,7 @@
 	"name": "folder-archiver",
 	"displayName": "Folder Archiver",
 	"description": "Archives any folder in the workspace",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"publisher": "pdamianik",
 	"engines": {
 		"vscode": "^1.45.0"
