@@ -75,7 +75,5 @@
 		"webpack": "^4.43.0",
 		"webpack-cli": "^3.3.11"
 	},
-	"dependencies": {
-		"jszip": "^3.4.0"
-	}
+	"dependencies": {}
 }
