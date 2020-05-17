@@ -16,6 +16,8 @@ After the folder is scanned and archived a save dialog will pop up to choose whe
 
 ## Requirements
 
+This extension does not have any runtime dependencys
+
 ## Extension Settings
 
 This extension contributes the following settings:
