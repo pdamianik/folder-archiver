@@ -115,7 +115,7 @@ export class ArchiveTypeManager {
         if (extensions.getExtension(extensionId) === undefined) {
             return;
         }
-
+        
         if (!this._extensionIds.hasOwnProperty(extensionId)) {
             this._extensionIds[extensionId] = [];
         }
