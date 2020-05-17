@@ -219,11 +219,11 @@ In your package.json you need to add a new entry `extensionDependencies`. This i
 
 ### Step 10: Register the new ArchiveType
 
-To let this extension know that you developed a new ArchiveType you have to register your new ArchiveType. You can package and register multiple ArchiveTypes with one extension. To register the new archive type we have to get the `folder-archiver` extension or rather its exported API, on which we will call the `registerArchiveType()` extension which takes an object of our new cutsom archive type as a parameter. This function can be called with an virtually unlimited amount of parameters which enables us to register multiple new archive types at once, but in this ZIP example we are going to stick with just one new archive type. It's recommended to call this function in the activate() function of your extension but you can call it enywhere you want, because the folder archiver can live without it.
+To let this extension know that you developed a new ArchiveType you have to register your new ArchiveType. You can package and register multiple ArchiveTypes with one extension. To register the new archive type we have to get the `folder-archiver` extension or rather its exported API, on which we will call the `registerArchiveType()` extension which takes the id of our extension as the first parameter and an object of our new cutsom archive type as the second parameter. This function can be called with an virtually unlimited amount of parameters which enables us to register multiple new archive types at once, but in this ZIP example we are going to stick with just one new archive type. It's recommended to call this function in the activate() function of your extension but you can call it enywhere you want, because the folder archiver can live without it.
 
 ```typescript
-let folderArchiverExtension = vscode.extensions.getExtension('pdamianik.folder-archiver');
-folderArchiverExtension?.exports.registerArchiveType(new ZipArchiveType());
+let folderArchiverExtensionAPI = vscode.extensions.getExtension('pdamianik.folder-archiver');
+folderArchiverExtensionAPI?.exports.registerArchiveType('pdamianik.zip-archive-type', new ZipArchiveType());
 ```
 
 And with that you can test out your new archive type
