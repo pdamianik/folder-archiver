@@ -227,7 +227,3 @@ folderArchiverExtensionAPI?.exports.registerArchiveType('pdamianik.zip-archive-t
 ```
 
 And with that you can test out your new archive type
-
-### Step 11: Reregistering your archive type
-
-The folder-archiver extension automatically unregisters the archive types of extensions that are disabled or uninstalled, but what it can't do is reregister your archive types when the folder-archiver extension gets uninstalled or diabled. So you should register a [onDidChange event listener](https://code.visualstudio.com/api/references/vscode-api#extensions) to check if the folder-archiver extension got uninstalld/disabled and installed/enabled again, in which case you should probalby reregister your custom archive types.
