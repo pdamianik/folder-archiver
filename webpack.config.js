@@ -19,7 +19,10 @@ const config = {
         vscode: 'commonjs vscode'
     },
     resolve: {
-        extensions: ['.ts', '.js']
+        extensions: ['.ts', '.js'],
+        fallback: {
+            "path": require.resolve("path"),
+        }
     },
     module: {
         rules: [
@@ -33,6 +36,6 @@ const config = {
                 ]
             }
         ]
-    }
+    },
 };
 module.exports = config;
