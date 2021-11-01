@@ -6,7 +6,7 @@ const path = require('path');
 
 /**@type {import('webpack').Configuration}*/
 const config = {
-    target: 'node',
+    target: 'webworker',
     entry: './src/extension.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -21,7 +21,7 @@ const config = {
     resolve: {
         extensions: ['.ts', '.js'],
         fallback: {
-            "path": require.resolve("path"),
+            "path": require.resolve("path-browserify"),
         }
     },
     module: {
